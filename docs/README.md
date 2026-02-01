@@ -13,10 +13,10 @@ This guide focuses on transforming raw ONT sequencing data into annotated bacter
 
 ## Sturcture
 
-1 - [QC](TUTORIAL_01_QC.md)
-2 - [Assembly](TUTORIAL_02_ASSEMBLY.md)
-3 - [Annotation](TUTORIAL_03_ANNOTATION.md)
-4 - TBD
+1. [QC](TUTORIAL_01_QC.md)
+2. [Assembly](TUTORIAL_02_ASSEMBLY.md)
+3. [Annotation](TUTORIAL_03_ANNOTATION.md)
+4. TBD
 
 ---
 
