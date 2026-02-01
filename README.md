@@ -28,6 +28,7 @@ This repository contains a complete bioinformatics workflow for analyzing Oxford
 
 - **[Setup Guide](docs/SETUP.md)**: Installation, database downloads, and troubleshooting
 - **[Guide](docs/README.md)**: Quality control, assembly, and annotation, etc.
+- **[Introduction to CLI](https://github.com/ColinL1/CLI-exercises)**: Basics of command-line usage
 
 ---
 
