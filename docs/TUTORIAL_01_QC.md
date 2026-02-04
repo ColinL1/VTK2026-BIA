@@ -20,10 +20,10 @@ By the end of this tutorial, you will be able to:
 conda activate VTK2026_QC
 
 # Verify tools are installed
-nanoplot --version
+NanoPlot --version
 porechop_abi --version
 filtlong --version
-nanostat --version
+NanoStat --version
 ```
 
 ### Directory Setup
