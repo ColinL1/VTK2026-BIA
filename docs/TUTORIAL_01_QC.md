@@ -398,9 +398,8 @@ NanoPlot -t 4 \
 
 ```bash
 NanoStat --fastq results/qc/filtered/F003_M_enclense_filtered.fastq.gz \
-    --name F003_M_enclense_filtered_stats.txt \
-    -t 4 \
-    > results/qc/F003_M_enclense_filtered_stats.txt
+    --name results/qc/F003_M_enclense_filtered_stats.txt \
+    -t 4 
 ```
 
 ### 6.3 Compare Raw vs. Filtered
