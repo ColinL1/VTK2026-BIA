@@ -39,7 +39,7 @@ ls results/qc/filtered/F003_M_enclense_filtered.fastq.gz
 
 ```bash
 # Navigate to project directory
-cd /home/colinl/Proj/VTK2026
+cd ~/'MY-NAME-EXAMPLE'/ # change this to your own name. 
 
 # Create assembly directories
 mkdir -p results/assembly/F003_M_enclense/flye
@@ -61,7 +61,6 @@ mkdir -p results/assembly/F003_M_enclense/qc
 ### Why No Reference for Our Samples?
 
 Our coral-associated bacteria (*Microbacterium enclense*, *M. ginsengisoli*, *Alteromonas portus*) are:
-- Recently isolated from coral microbiomes
 - Lack high-quality complete genome references
 - May have unique genomic features
 
@@ -126,17 +125,12 @@ Before assembly, estimate expected genome size:
 ### 1.3 Run Flye Assembly
 
 ```bash
-# Set sample and parameters
-SAMPLE="F003_M_enclense"
-GENOME_SIZE="3.5m"  # 3.5 Mb
-THREADS=8
-
 # Run Flye
 flye \
-    --nano-hq results/qc/filtered/${SAMPLE}_filtered.fastq.gz \
-    --genome-size ${GENOME_SIZE} \
-    --threads ${THREADS} \
-    --out-dir results/assembly/${SAMPLE}/flye \
+    --nano-hq results/qc/filtered/F003_M_enclense_filtered.fastq.gz \
+    --genome-size 3.5m \
+    --threads 4 \
+    --out-dir results/assembly/F003_M_enclense/flye \
     --iterations 2 \
     --meta
 ```
@@ -147,7 +141,7 @@ flye \
 - `--genome-size 3.5m`: Expected genome size
   - Use `m` for megabases (3.5m = 3,500,000 bp)
   - Use `g` for gigabases if needed
-- `--threads 8`: Number of CPU threads
+- `--threads 4`: Number of CPU threads
 - `--out-dir`: Output directory
 - `--iterations 2`: Number of polishing iterations
   - Default is 1, 2-3 recommended for better accuracy
@@ -156,7 +150,7 @@ flye \
   - Helpful for plasmids and chromosomes with different coverage
   - Prevents over-collapsing of repeats
 
-**⏱️ Runtime:** 1-3 hours depending on coverage and genome size
+**⏱️ Runtime:** 2-3 hours depending on coverage and genome size
 
 ### 1.4 Monitor Progress
 
@@ -366,18 +360,13 @@ cp results/assembly/F003_M_enclense/flye/assembly.fasta \
 ### 3.5 Run Medaka Polishing
 
 ```bash
-# Set parameters
-SAMPLE="F003_M_enclense"
-THREADS=8
-MODEL="r1041_e82_400bps_sup_v5.2.0"
-
 # Run medaka_consensus
 medaka_consensus \
-    -i results/qc/filtered/${SAMPLE}_filtered.fastq.gz \
-    -d results/assembly/${SAMPLE}/${SAMPLE}_flye.fasta \
-    -o results/assembly/${SAMPLE}/medaka \
-    -t ${THREADS} \
-    -m ${MODEL}
+    -i results/qc/filtered/F003_M_enclense_filtered.fastq.gz \
+    -d results/assembly/F003_M_enclense/F003_M_enclense_flye.fasta \
+    -o results/assembly/F003_M_enclense/medaka \
+    -t 4 \
+    -m r1041_e82_400bps_sup_v5.2.0
 ```
 
 **Parameter explanation:**
@@ -447,7 +436,7 @@ quast.py \
     results/assembly/F003_M_enclense/F003_M_enclense_flye.fasta \
     results/assembly/F003_M_enclense/F003_M_enclense_polished.fasta \
     -o results/assembly/F003_M_enclense/qc/quast \
-    --threads 8 \
+    --threads 4 \
     --min-contig 500 \
     --labels "Flye,Flye+Medaka"
 ```
@@ -560,12 +549,10 @@ busco --download bacteria_odb10
 
 ```bash
 # Run BUSCO on polished assembly
-SAMPLE="F003_M_enclense"
-
 busco \
-    -i results/assembly/${SAMPLE}/${SAMPLE}_polished.fasta \
-    -o ${SAMPLE}_busco \
-    --out_path results/assembly/${SAMPLE}/qc \
+    -i results/assembly/F003_M_enclense/F003_M_enclense_polished.fasta \
+    -o F003_M_enclense_busco \
+    --out_path results/assembly/F003_M_enclense/qc \
     -m genome \
     -l bacteria_odb10 \
     --cpu 8 \
@@ -721,7 +708,7 @@ SAMPLE="F003_M_ginsengisoli"
 GENOME_SIZE="3.8m"
 
 flye --nano-hq results/qc/filtered/${SAMPLE}_filtered.fastq.gz \
-    --genome-size ${GENOME_SIZE} --threads 8 \
+    --genome-size ${GENOME_SIZE} --threads 4 \
     --out-dir results/assembly/${SAMPLE}/flye \
     --iterations 2 --meta
 
@@ -744,7 +731,7 @@ SAMPLE="F003_A_portus"
 GENOME_SIZE="4.5m"  # Larger genome
 
 flye --nano-hq results/qc/filtered/${SAMPLE}_filtered.fastq.gz \
-    --genome-size ${GENOME_SIZE} --threads 8 \
+    --genome-size ${GENOME_SIZE} --threads 4 \
     --out-dir results/assembly/${SAMPLE}/flye \
     --iterations 2 --meta
 
@@ -770,7 +757,7 @@ for SAMPLE in F003_M_enclense F003_M_ginsengisoli F003_A_portus; do
         results/assembly/${SAMPLE}/${SAMPLE}_flye.fasta \
         results/assembly/${SAMPLE}/${SAMPLE}_polished.fasta \
         -o results/assembly/${SAMPLE}/qc/quast \
-        --threads 8 --min-contig 500 \
+        --threads 4 --min-contig 500 \
         --labels "Flye,Flye+Medaka"
 done
 
@@ -929,7 +916,7 @@ Once you have high-quality assemblies:
 ### Essential Assembly Workflow
 ```bash
 # 1. Flye assembly
-flye --nano-hq filtered.fastq.gz --genome-size 3.5m --threads 8 \
+flye --nano-hq filtered.fastq.gz --genome-size 3.5m --threads 4 \
     --out-dir flye_out/ --iterations 2 --meta
 
 # 2. Medaka polishing
@@ -937,7 +924,7 @@ medaka_consensus -i filtered.fastq.gz -d draft.fasta -o medaka_out/ \
     -t 8 -m r1041_e82_400bps_sup_v5.2.0
 
 # 3. QUAST assessment
-quast.py draft.fasta polished.fasta -o quast_out/ --threads 8
+quast.py draft.fasta polished.fasta -o quast_out/ --threads 4
 
 # 4. BUSCO completeness
 busco -i polished.fasta -o busco_out -m genome -l bacteria_odb10 --cpu 8
