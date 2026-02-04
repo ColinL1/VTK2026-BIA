@@ -205,9 +205,8 @@ NanoStat provides similar information to NanoPlot but in text format only (faste
 
 ```bash
 NanoStat --fastq data/raw_reads/F003_M_enclense.fastq.gz \
-    --name F003_M_enclense_raw_stats.txt \
-    -t 4 \
-    > results/qc/F003_M_enclense_raw_stats.txt
+    --name results/qc/F003_M_enclense_raw_NanoStats.txt \
+    -t 4 
 ```
 
 ### 3.2 Extract Specific Metrics
