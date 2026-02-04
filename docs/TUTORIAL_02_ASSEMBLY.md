@@ -131,7 +131,7 @@ flye \
     --genome-size 3.5m \
     --threads 4 \
     --out-dir results/assembly/F003_M_enclense/flye \
-    --iterations 2 \
+    --iterations 3 \
     --meta
 ```
 
