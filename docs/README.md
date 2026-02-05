@@ -16,7 +16,8 @@ This guide focuses on transforming raw ONT sequencing data into annotated bacter
 1. [QC](TUTORIAL_01_QC.md)
 2. [Assembly](TUTORIAL_02_ASSEMBLY.md)
 3. [Annotation](TUTORIAL_03_ANNOTATION.md)
-4. TBD
+4. [Comparisons](TUTORIAL_04_COMPARISON.md)
+5. [Pathways](TUTORIAL_05_PATHWAYS.md)
 
 ---
 

@@ -36,6 +36,10 @@ ls results/assembly/F003_M_enclense/F003_M_enclense_polished.fasta
 Bakta requires a reference database. This is a one-time download (~30 GB).
 
 ```bash
+# Set environment variable (add to ~/.bashrc for permanence)
+export BAKTA_DB=~/databases/bakta/db
+
+
 # Check if database exists
 if [ -z "$BAKTA_DB" ]; then
     echo "BAKTA_DB not set!"
@@ -46,9 +50,6 @@ fi
 # Download Bakta database (one-time, ~1-2 hours)
 mkdir -p ~/databases
 bakta_db download --output ~/databases/bakta_db --type full
-
-# Set environment variable (add to ~/.bashrc for permanence)
-export BAKTA_DB=~/databases/bakta_db
 ```
 
 **Database types:**
@@ -520,85 +521,22 @@ grep "COG:" F003_M_enclense.tsv | grep -o "COG:[^,]*" | cut -d: -f2 | \
 
 ## Step 7: Generate Custom Statistics
 
-### 7.1 Create Comprehensive Summary
-
-```bash
-# Create custom statistics file
-SAMPLE="F003_M_enclense"
-STATS="results/annotation/${SAMPLE}/${SAMPLE}_annotation_stats.txt"
-
-cat > $STATS <<EOF
-========================================
-Annotation Statistics for ${SAMPLE}
-========================================
-
-EOF
-
-# Add genome statistics from JSON
-python3 <<PYTHON_EOF >> $STATS
-import json
-
-with open('results/annotation/${SAMPLE}/${SAMPLE}.json', 'r') as f:
-    data = json.load(f)
-
-stats = data['stats']
-print(f"Genome Statistics:")
-print(f"  Size: {stats['size']:,} bp")
-print(f"  GC content: {stats['gc']:.2f}%")
-print(f"  Contigs: {stats['no_sequences']}")
-print(f"  N50: {stats.get('n50', 'N/A'):,} bp")
-print()
-print(f"Gene Counts:")
-print(f"  Total genes: {stats['no_genes']:,}")
-print(f"  CDS: {stats['no_cds']:,}")
-print(f"  tRNA: {stats['no_t_rna']}")
-print(f"  rRNA: {stats['no_r_rna']}")
-print(f"  ncRNA: {stats['no_nc_rna']}")
-print(f"  CRISPR: {stats.get('no_crispr', 0)}")
-PYTHON_EOF
-
-# Add functional annotation stats
-echo "" >> $STATS
-echo "Functional Annotation:" >> $STATS
-
-HYPOTHETICAL=$(grep -c "hypothetical protein" results/annotation/${SAMPLE}/${SAMPLE}.tsv || echo 0)
-TOTAL_CDS=$(grep -c "CDS" results/annotation/${SAMPLE}/${SAMPLE}.gff3 || echo 1)
-HYPOTHETICAL_PCT=$(echo "scale=1; $HYPOTHETICAL * 100 / $TOTAL_CDS" | bc)
-
-echo "  Hypothetical proteins: $HYPOTHETICAL ($HYPOTHETICAL_PCT%)" >> $STATS
-echo "  Functionally annotated: $((TOTAL_CDS - HYPOTHETICAL))" >> $STATS
-
-EC_COUNT=$(grep -c "EC:" results/annotation/${SAMPLE}/${SAMPLE}.tsv || echo 0)
-GO_COUNT=$(grep -c "GO:" results/annotation/${SAMPLE}/${SAMPLE}.tsv || echo 0)
-COG_COUNT=$(grep -c "COG:" results/annotation/${SAMPLE}/${SAMPLE}.tsv || echo 0)
-
-echo "  Genes with EC numbers: $EC_COUNT" >> $STATS
-echo "  Genes with GO terms: $GO_COUNT" >> $STATS
-echo "  Genes with COG categories: $COG_COUNT" >> $STATS
-
-# View the summary
-cat $STATS
-```
-
-### 7.2 Extract Most Common Functions
+### 7.1 Extract Most Common Functions
 
 ```bash
 # Top 20 most common gene products
 echo ""
 echo "Top 20 Most Common Gene Products:"
-grep "CDS" F003_M_enclense.tsv | cut -f8 | sort | uniq -c | sort -rn | head -20
+grep "cds" F003_M_enclense.tsv | cut -f8 | sort | uniq -c | sort -rn | head -20
 ```
 
-### 7.3 Analyze COG Functional Categories
+### 7.2 Analyze COG Functional Categories
 
 ```bash
 # COG category distribution
 echo ""
 echo "COG Functional Category Distribution:"
-grep "COG:" F003_M_enclense.tsv | grep -o "COG[0-9]*" | \
-    while read cog; do
-        grep "$cog" ~/databases/bakta_db/cog-*.txt | cut -f3
-    done | sort | uniq -c | sort -rn | head -15
+grep "COG:" F003_M_enclense.tsv | grep -o "COG[0-9]*" | sort | uniq -c | sort -rn | head -15
 ```
 
 ---
@@ -631,20 +569,25 @@ import matplotlib.pyplot as plt
 # Load GenBank file
 records = list(SeqIO.parse("F003_M_enclense.gbff", "genbank"))
 
-# Extract gene positions
-gene_starts = []
-gene_ends = []
+# Compute cumulative offsets per contig
+offset = 0
+xpos = []
+ypos = []
 for record in records:
     for feature in record.features:
         if feature.type == "CDS":
-            gene_starts.append(int(feature.location.start))
-            gene_ends.append(int(feature.location.end))
+            start = int(feature.location.start) + offset
+            strand = feature.location.strand or 0  # +1 or -1
+            xpos.append(start)
+            ypos.append(strand)
+    offset += len(record.seq)
 
-# Plot gene distribution
+# Plot gene distribution by strand across concatenated contigs
 plt.figure(figsize=(12, 4))
-plt.scatter(gene_starts, [1]*len(gene_starts), alpha=0.3, s=1)
-plt.xlabel("Genome Position (bp)")
-plt.title("Gene Distribution Across Genome")
+plt.scatter(xpos, ypos, alpha=0.4, s=2)
+plt.yticks([-1, 0, 1], ["-", "0", "+"])
+plt.xlabel("Genome Position (bp, concatenated contigs)")
+plt.title("Gene Distribution Across Genome (by strand)")
 plt.tight_layout()
 plt.savefig("gene_distribution.png", dpi=300)
 ```
@@ -672,27 +615,27 @@ for SAMPLE in F003_M_ginsengisoli F003_A_portus H2_M_enclense H2_M_ginsengisoli 
 done
 ```
 
-### 9.2 Create Comparison Table
+<!-- ### 9.2 Create Comparison Table
 
 ```bash
 # Create comparison table
 echo -e "Sample\tSize\tGenes\tCDS\ttRNA\trRNA\tHypothetical%" > annotation_comparison.tsv
 
-for SAMPLE in F003_M_enclense F003_M_ginsengisoli F003_A_portus H2_M_enclense H2_M_ginsengisoli H2_A_portus; do
+find results/annotation -name "*.json" | while read line ; do 
     # Extract stats from JSON
-    SIZE=$(python3 -c "import json; f=open('results/annotation/${SAMPLE}/${SAMPLE}.json'); \
+    SIZE=$(python3 -c "import json; f=open('${line}'); \
         print(json.load(f)['stats']['size'])")
-    GENES=$(python3 -c "import json; f=open('results/annotation/${SAMPLE}/${SAMPLE}.json'); \
+    GENES=$(python3 -c "import json; f=open('${line}'); \
         print(json.load(f)['stats']['no_genes'])")
-    CDS=$(python3 -c "import json; f=open('results/annotation/${SAMPLE}/${SAMPLE}.json'); \
+    CDS=$(python3 -c "import json; f=open('${line}'); \
         print(json.load(f)['stats']['no_cds'])")
-    TRNA=$(python3 -c "import json; f=open('results/annotation/${SAMPLE}/${SAMPLE}.json'); \
+    TRNA=$(python3 -c "import json; f=open('${line}'); \
         print(json.load(f)['stats']['no_t_rna'])")
-    RRNA=$(python3 -c "import json; f=open('results/annotation/${SAMPLE}/${SAMPLE}.json'); \
+    RRNA=$(python3 -c "import json; f=open('${line}'); \
         print(json.load(f)['stats']['no_r_rna'])")
     
     # Calculate hypothetical percentage
-    HYPO=$(grep -c "hypothetical protein" results/annotation/${SAMPLE}/${SAMPLE}.tsv || echo 0)
+    HYPO=$(grep -c "hypothetical protein" $(${line} | sed 's/.json/.tsv/g') || echo 0)
     HYPO_PCT=$(echo "scale=1; $HYPO * 100 / $CDS" | bc)
     
     echo -e "${SAMPLE}\t${SIZE}\t${GENES}\t${CDS}\t${TRNA}\t${RRNA}\t${HYPO_PCT}" >> annotation_comparison.tsv
@@ -707,12 +650,12 @@ column -t annotation_comparison.tsv
 ```bash
 # Extract gene names for each sample
 for SAMPLE in F003_M_enclense F003_M_ginsengisoli; do
-    grep "	gene	" results/annotation/${SAMPLE}/${SAMPLE}.gff3 | \
+    grep "	gene	" ${SAMPLE} | \
         grep -o "Name=[^;]*" | cut -d= -f2 | sort > ${SAMPLE}_genes.txt
 done
 
 # Find common genes (core genome)
-comm -12 F003_M_enclense_genes.txt F003_M_ginsengisoli_genes.txt | wc -l
+  F003_M_enclense_genes.txt F003_M_ginsengisoli_genes.txt | wc -l
 echo "Core genes (shared between both Microbacterium species)"
 
 # Find unique genes (accessory genome)
@@ -721,7 +664,7 @@ echo "Unique to M. enclense"
 
 comm -13 F003_M_enclense_genes.txt F003_M_ginsengisoli_genes.txt | wc -l
 echo "Unique to M. ginsengisoli"
-```
+``` 
 
 ---
 
@@ -776,7 +719,7 @@ grep "CDS" F003_M_enclense.tsv | \
     sort -k1 >> gene_catalog.txt
 
 head -20 gene_catalog.txt
-```
+```-->
 
 ---
 
@@ -945,4 +888,4 @@ bioawk -c fastx '{print $name, length($seq)}' sample.faa | sort -k2 -rn | head -
 
 ---
 
-**Continue to:** [TBD](./TUTORIAL_04_COMPARING.md)
+**Continue to:** [TBD](./TUTORIAL_04_COMPARISON.md)
