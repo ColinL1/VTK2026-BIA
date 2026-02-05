@@ -124,7 +124,7 @@ zcat F003_M_enclense.fastq.gz | wc -c | awk '{print $1/1024/1024 " MB"}'
 cd ~/'MY-NAME-EXAMPLE'/
 
 # Run NanoPlot
-NanoPlot -t 3 \
+NanoPlot -t 4 \
     --fastq data/raw_reads/examples.fastq.gz \
     --loglength \
     --plots dot \
@@ -298,7 +298,7 @@ zcat results/qc/trimmed/F003_M_enclense_trimmed.fastq.gz | wc -l | awk '{print $
 **Filtlong filtering strategies:**
 1. **Length-based:** Remove very short reads (<1 kb)
 2. **Quality-based:** Prioritize high-quality reads
-3. **Coverage-based:** Subsample to target coverage (e.g., 100x)
+3. **Coverage-based:** Subsample to target coverage (e.g., 200x)
 
 **Why filter?**
 - Speeds up assembly (less data to process)
@@ -307,7 +307,7 @@ zcat results/qc/trimmed/F003_M_enclense_trimmed.fastq.gz | wc -l | awk '{print $
 
 ### 5.2 Calculate Target Bases
 
-For optimal bacterial assembly, target **50-100x coverage**:
+For optimal bacterial assembly, target **100-200x coverage**:
 
 ```bash
 # Define your genome size
@@ -315,7 +315,7 @@ For optimal bacterial assembly, target **50-100x coverage**:
 # Alteromonas: ~4.5 Mb = 4,500,000 bp
 
 GENOME_SIZE=3500000  # For Microbacterium enclense
-TARGET_COV=100
+TARGET_COV=200
 TARGET_BASES=$((GENOME_SIZE * TARGET_COV))
 
 echo "Target bases: ${TARGET_BASES}"
@@ -455,11 +455,11 @@ zcat results/qc/filtered/F003_M_enclense_filtered.fastq.gz | \
 
 ```bash
 # Extract total bases from stats
-TOTAL_BASES=$(grep "Total bases:" results/qc/F003_M_enclense_filtered_stats.txt | awk '{print $3}')
+TOTAL_BASES=$(grep "Total bases:" results/qc/F003_M_enclense_filtered_stats.txt | awk '{print $3}' | cut -d. -f1 | sed s'/\,//g')
 GENOME_SIZE=3500000
 
 echo "scale=1; $TOTAL_BASES / $GENOME_SIZE" | bc
-# Should be close to 100x
+# Should be close to 200x
 ```
 
 ---

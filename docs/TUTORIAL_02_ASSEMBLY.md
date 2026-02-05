@@ -18,7 +18,7 @@ By the end of this tutorial, you will be able to:
 
 ```bash
 # Activate the assembly conda environment
-conda activate assembly
+conda activate VTK2026_Assembly
 
 # Verify tools are installed
 flye --version
@@ -150,7 +150,10 @@ flye \
   - Helpful for plasmids and chromosomes with different coverage
   - Prevents over-collapsing of repeats
 
-**⏱️ Runtime:** 2-3 hours depending on coverage and genome size
+**⏱️ Runtime:** 1-2 hours depending on coverage and genome size
+
+**Example output:**
+![example-out](./statics/example.flye.jpeg)
 
 ### 1.4 Monitor Progress
 
@@ -376,7 +379,7 @@ medaka_consensus \
 - `-t`: Number of threads
 - `-m`: Medaka model (match your basecaller!)
 
-**⏱️ Runtime:** 30-60 minutes
+**⏱️ Runtime:** ~20 minutes
 
 ### 3.6 Monitor Medaka Progress
 
