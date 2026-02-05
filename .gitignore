@@ -1,1 +1,7 @@
 .vscode
+#scripts/
+docs/INTRODUCTION.backup.md
+docs/WEEK1.md
+docs/WEEK2.md
+.gitignore
+env_files/VTK2026_all.yml
