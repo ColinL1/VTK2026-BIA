@@ -20,5 +20,4 @@ This guide focuses on transforming raw ONT sequencing data into annotated bacter
 
 ---
 
-General file formats information: [INTRODUCTION](INTRODUCTION.md)
-Software used in this tutorial: [SOFTWARE](SETUP.md)
+General file formats information: [INTRODUCTION](INTRODUCTION.md) | Software used in this tutorial: [SOFTWARE](SETUP.md)

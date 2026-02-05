@@ -287,6 +287,9 @@ eog results/assembly/F003_M_enclense/assembly_graph.png
 - **Connected components:** Separate replicons
 - **Node thickness:** Coverage depth
 
+**Example:**
+![example-out](./statics/assembly_graph.png)
+
 ### 2.4 Interactive Exploration
 
 ```bash
@@ -545,7 +548,7 @@ busco --list-datasets
 # Download specific dataset
 busco --download bacteria_odb10
 
-# Database installed to: ~/.busco_downloads/lineages/bacteria_odb10/
+# Database installed to: ~/databases/busco/busco_downloads
 ```
 
 ### 5.3 Run BUSCO
@@ -558,8 +561,9 @@ busco \
     --out_path results/assembly/F003_M_enclense/qc \
     -m genome \
     -l bacteria_odb10 \
-    --cpu 8 \
-    --offline
+    --cpu 4 \
+    --offline \
+    --download_path ~/databases/busco/busco_downloads
 ```
 
 **Parameter explanation:**
@@ -572,6 +576,9 @@ busco \
 - `--offline`: Don't check for updates (faster)
 
 **⏱️ Runtime:** 10-30 minutes
+
+**Example output:**
+![example-out](./statics/example.busco.jpeg)
 
 ### 5.4 View BUSCO Results
 
@@ -642,10 +649,126 @@ cat results/assembly/F003_M_enclense/qc/F003_M_enclense_busco/run_bacteria_odb10
 cat results/assembly/F003_M_enclense/qc/F003_M_enclense_busco/run_bacteria_odb10/fragmented_busco_list.txt
 ```
 
+### 5.7 Additional Quality Check with CheckM2
+
+**CheckM2** provides an alternative completeness assessment using machine learning, and directly estimates contamination levels that BUSCO doesn't quantify.
+
+```bash
+# Run CheckM2 on polished assembly
+checkm2 predict \
+    --input results/assembly/F003_M_enclense/F003_M_enclense_polished.fasta \
+    --output-directory results/assembly/F003_M_enclense/qc/checkm2 \
+    --threads 4 \
+    --database_path ~/databases/CheckM2_database/uniref100.KO.1.dmnd
+```
+
+Parameter explanation:
+- `--input`: Input assembly file (FASTA)
+- `--output-directory`: Directory for CheckM2 results
+- `--threads`: Number of CPU threads
+- `--database_path`: Path to CheckM2 database (download once with checkm2 database --download)
+
+**⏱️ Runtime:** 5-15 minutes for a typical bacterial genome
+
+### 5.8 View CheckM2 Results
+```bash
+# View the main output table
+cat results/assembly/F003_M_enclense/qc/checkm2/quality_report.tsv
+```
+
+Example Output:
+```text
+Name                                    Completeness    Contamination    Completeness_Model_Used    Translation_Table_Used    Coding_Density    Contig_N50    Average_Gene_Length    Genome_Size
+F003_M_enclense_polished                99.12           0.84             Neural Network (Specific)  11                        89.45             2847563       891.2                  4235891
+```
+
+### 5.9 Interpret CheckM2 Results
+#### Key metrics:
+- **Completeness (%):** Estimated genome completeness based on ML prediction
+    - CheckM2 uses gradient boosting and neural networks trained on thousands of genomes
+    - More robust than marker-based methods for unusual/reduced genomes
+- **Contamination (%):** Estimated contamination from foreign DNA
+  - Detects non-target organism sequences
+  - More sensitive than BUSCO duplication for detecting contamination
+- **Coding_Density (%):** Percentage of genome that codes for genes
+  - Typical bacteria: 85-92%
+  - Low values may indicate assembly errors or ONT homopolymer issues
+- **Average_Gene_Length (bp):** Mean length of predicted genes
+  - Typical bacteria: 850-950 bp
+  - Unusually short genes may indicate frameshift errors from ONT sequencing
+
+#### Quality thresholds for bacterial isolates:
+
+**Excellent:**
+- Completeness: ≥99%
+- Contamination: ≤1%
+- Coding density: 85-92%
+
+**Good:**
+- Completeness: ≥95%
+- Contamination: ≤2%
+- Coding density: 80-92%
+
+**Concerning:**
+- Completeness: <90%
+- Contamination: >5%
+- Coding density: <80% or >95%
+
+### 5.10 Compare BUSCO and CheckM2
+
+```bash
+# Extract key metrics for comparison
+echo "=== BUSCO ==="
+grep "C:" $BUSCO_SUMMARY
+
+echo -e "\n=== CheckM2 ==="
+tail -n 1 results/assembly/F003_M_enclense/qc/checkm2/quality_report.tsv | \
+    cut -f2,3 | awk '{print "Completeness: "$1"%\nContamination: "$2"%"}'
+```
+
+**When results agree:**
+
+- BUSCO C:>95% + CheckM2 completeness >95% and contamination <2% → High confidence in assembly quality
+
+**When results disagree:**
+
+| BUSCO | CheckM2 | Likely cause | Action |
+|-------|---------|--------------|--------|
+| High complete | Low completeness | Wrong BUSCO lineage selected | Re-run BUSCO with more specific lineage |
+| Low complete | High completeness | Reduced genome or unusual lineage | Trust CheckM2; inspect missing BUSCO genes |
+| Low duplication | High contamination | Culture contamination | Check for multiple taxa with Kraken2 |
+| High duplication | Low contamination | True tandem duplications | Inspect duplicated genes manually |
+
+### 5.11 Troubleshooting Quality Issues
+
+**If completeness <95%:**
+- Check sequencing coverage: aim for ≥50× for ONT
+- Verify no size selection bias during library prep
+- Consider hybrid polishing if accuracy is limiting assembly contiguity
+
+**If coding density <85%:**
+- May indicate homopolymer errors reducing gene call quality
+- Consider additional polishing rounds with Medaka or Polypolish
+
+**💡 Tip:** For isolate genomes, both BUSCO and CheckM2 should give excellent scores (>95% complete, <2% contamination). If either tool flags issues, investigate before proceeding to annotation and downstream analysis.
+
+<details>
+<summary>If contamination >2%:</summary>
+
+```bash
+# Screen for contaminating taxa
+kraken2 \
+    --db ~/databases/kraken2/standard \
+    --threads 4 \
+    --report results/assembly/F003_M_enclense/qc/kraken2_report.txt \
+    results/assembly/F003_M_enclense/F003_M_enclense_polished.fasta
+```
+</details>
+
 ---
 
 ## Step 6: Generate Assembly Summary
-
+<!-- 
 ### 6.1 Create Summary Report
 
 ```bash
@@ -674,9 +797,9 @@ cat results/assembly/${SAMPLE}/flye/assembly_info.txt >> $SUMMARY
 
 # View summary
 cat $SUMMARY
-```
+``` -->
 
-### 6.2 Compare Multiple Samples
+### 6.1 Compare Multiple Samples
 
 ```bash
 # Create comparison table
@@ -872,8 +995,7 @@ Fill in this table for your sample:
 ### Task 2: Interpretation
 
 1. **Does assembly size match expected genome size?**
-   - *Microbacterium*: 3-4 Mb
-   - *Alteromonas*: 4-5 Mb
+
 
 2. **How contiguous is your assembly?**
    - Calculate: `Largest contig / Total size × 100%`

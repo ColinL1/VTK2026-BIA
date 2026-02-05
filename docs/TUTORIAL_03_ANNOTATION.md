@@ -59,7 +59,7 @@ export BAKTA_DB=~/databases/bakta_db
 
 ```bash
 # Navigate to project directory
-cd /home/colinl/Proj/VTK2026
+cd ~/'MY-NAME-EXAMPLE'/ # change this to your own name. and work in here from now on. 
 
 # Create annotation directories
 mkdir -p results/annotation/F003_M_enclense
@@ -124,7 +124,7 @@ mkdir -p results/annotation/F003_M_enclense
 ```bash
 # Verify assembly exists and is valid
 SAMPLE="F003_M_enclense"
-ASSEMBLY="results/assembly/${SAMPLE}/${SAMPLE}_polished.fasta"
+ASSEMBLY="results/assembly/F003_M_enclense/F003_M_enclense_polished.fasta"
 
 # Check file
 ls -lh $ASSEMBLY
@@ -139,21 +139,16 @@ head -10 $ASSEMBLY
 ### 1.2 Run Bakta
 
 ```bash
-# Set parameters
-SAMPLE="F003_M_enclense"
-THREADS=4
-BAKTA_DB=~/databases/bakta_db
-
 # Run Bakta annotation
 bakta \
-    --db ${BAKTA_DB} \
-    --output results/annotation/${SAMPLE} \
-    --prefix ${SAMPLE} \
-    --threads ${THREADS} \
+    --db ~/databases/bakta/db \
+    --output results/annotation/F003_M_enclense \
+    --prefix F003_M_enclense \
+    --threads 4 \
     --verbose \
     --keep-contig-headers \
     --compliant \
-    results/assembly/${SAMPLE}/${SAMPLE}_polished.fasta
+    results/assembly/F003_M_enclense/F003_M_enclense_polished.fasta
 ```
 
 **Parameter explanation:**
@@ -166,7 +161,7 @@ bakta \
 - `--compliant`: Generate NCBI-compliant output
 - Input: Polished assembly FASTA
 
-**⏱️ Runtime:** 60 minutes per genome
+**⏱️ Runtime:** ~60 minutes per genome
 
 ### 1.3 Monitor Progress
 
@@ -615,7 +610,7 @@ grep "COG:" F003_M_enclense.tsv | grep -o "COG[0-9]*" | \
 Bakta generates a circular genome visualization:
 
 ```bash
-# View the circular plot
+# View the circular plot. Only works if you have access to a GUI
 eog F003_M_enclense.png
 ```
 
