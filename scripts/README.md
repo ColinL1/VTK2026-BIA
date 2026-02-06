@@ -2,14 +2,9 @@
 
 This directory contains analysis scripts that cover all the steps described in the 2026 VTK course. See [docs](docs/README.md)
 
-**What it does**:
-- Part 1. QC, Assembly, Annotation
-- Part 2. Gene Screening, Comparative Genomics, Pathway Analysis
-- Part 3. Visualization
-
 ---
 
-## Week 1 Scripts
+## Analysis Scripts
 
 ### `01_quality_control.sh`
 Assess raw read quality, trim adapters, and filter reads.
@@ -87,111 +82,31 @@ bash 03_annotation.sh F003_M_enclense 8
 - `results/annotation/<sample>/<sample>_annotation_stats.txt` - Summary
 
 ---
-<!-- 
-## Part 1 Scripts
 
 ### `04_gene_screening.sh`
-Screen for biosynthetic gene clusters, AMR genes, and coral-specific traits.
+Screen for biosynthetic gene clusters, AMR genes, and other features.
 
 **Usage**:
 ```bash
-bash 04_gene_screening.sh <sample_path> <threads>
+conda activate VTK2026_gene-screening
+bash 04_gene_screening.sh <assembly> <gff> <proteins> <threads>
 ```
 
 **Example**:
 ```bash
-bash 04_gene_screening.sh F003_M_enclense 8
+bash 04_gene_screening.sh results/assembly/F003_M_enclense/F003_M_enclense_polished.fasta \
+  results/annotation/F003_M_enclense/F003_M_enclense.gff3 \
+  results/annotation/F003_M_enclense/F003_M_enclense.faa 8
 ```
 
-**Tools used**: antiSMASH, ABRicate, AMRFinderPlus, BLAST
+**Tools used**: antiSMASH, ABRicate, AMRFinderPlus
 
 **Outputs**:
-- `results/screening/<sample>/antismash/` - BGC predictions
-- `results/screening/<sample>/amr/` - AMR gene hits
-- `results/screening/<sample>/custom_genes/` - Specific genes
-- `results/screening/<sample>/<sample>_screening_summary.txt` - Summary
+- `results/screening/<sample>/` - Screening results
 
 ---
 
-### `05_comparative_genomics.sh`
-Multi-level comparative genomics and pangenome analysis.
-
-**Usage**:
-```bash
-bash 05_comparative_genomics.sh <analysis_type> <threads>
-```
-
-**Analysis types**:
-- `species` - Compare strains within same species
-- `genus` - Compare species within genus
-- `all` - Compare all 12 isolates
-
-**Examples**:
-```bash
-bash 05_comparative_genomics.sh species 8
-bash 05_comparative_genomics.sh genus 8
-bash 05_comparative_genomics.sh all 8
-```
-
-**Tools used**: FastANI, OrthoFinder
-
-**Outputs**:
-- `results/comparative/ani/` - ANI matrices
-- `results/comparative/orthofinder/` - Ortholog clustering
-- `results/comparative/pangenome/` - Core/accessory genome analysis
-- `results/comparative/phylogenomics/` - Phylogenetic trees
-- `results/comparative/comparative_summary_*.txt` - Summaries
-
----
-
-### `06_pathway_analysis.sh`
-Metabolic pathway reconstruction and visualization.
-
-**Usage**:
-```bash
-bash 06_pathway_analysis.sh <sample_path> <threads>
-bash 06_pathway_analysis.sh comparative <threads>
-```
-
-**Examples**:
-```bash
-# Individual sample
-bash 06_pathway_analysis.sh F003_M_enclense 8
-
-# Comparative analysis
-bash 06_pathway_analysis.sh comparative 8
-```
-
-**Tools used**: Custom Python scripts, KEGG Mapper
-
-**Outputs**:
-- `results/pathways/<sample>/ec_numbers.txt` - EC numbers
-- `results/pathways/<sample>/kegg_pathways.txt` - KEGG pathway info
-- `results/pathways/<sample>/coral_pathways_summary.txt` - Coral-relevant pathways
-- `results/pathways/comparative/` - Comparative pathway analysis -->
-
----
-
-## Tips for Using Scripts
-
-### Running Scripts in Parallel
-
-For faster processing, you can run multiple samples in parallel using GNU Parallel or background processes:
-
-```bash
-# Using background processes (careful with resource usage!)
-bash 01_quality_control.sh F003_M_enclense 4 &
-bash 01_quality_control.sh F003_M_ginsengisoli 4 &
-wait  # Wait for all background jobs to complete
-```
-
-### Resuming After Interruption
-
-All scripts check for existing output files and can resume from where they left off. If a script fails:
-
-1. Check the error message
-2. Fix the issue (disk space, memory, input files)
-3. Re-run the same command
+> **Note**: Scripts `05_comparative_genomics.sh` and `06_pathway_analysis.sh` are not yet final.
 
 
 ### Logging
@@ -201,33 +116,6 @@ Redirect output to log files for later review:
 ```bash
 bash 02_assembly.sh F003_M_enclense 8 3.5m 2>&1 | tee assembly_F003.log
 ```
-
----
-
-## Troubleshooting
-
-### Common Issues
-
-1. **"Command not found"**
-   - Ensure conda environment is activated: `conda activate coral_genomics`
-
-2. **"Permission denied"**
-   - Scripts not executable: `chmod +x scripts/*.sh scripts/*/*.sh`
-
-3. **"No such file or directory"**
-   - Check input files exist in correct locations
-   - Verify paths in `data/metadata/sample_info.csv`
-
-4. **Out of memory**
-   - Reduce thread count
-   - Process samples one at a time
-   - Increase system swap space
-
-5. **Disk space full**
-   - Clean up intermediate files
-   - Move results to larger drive
-   - Remove old results before rerunning
-
 
 ---
 
@@ -242,6 +130,4 @@ bash 02_assembly.sh F003_M_enclense 8 3.5m 2>&1 | tee assembly_F003.log
 
 ---
 
-For detailed explanations and exercises, see:
-- [Step-by-step Guide](../docs/README.md)
-- [Setup Guide](../docs/SETUP.md)
+For detailed explanations and exercises, see: [Step-by-step Guide](../docs/README.md) | Software used in this tutorial: [SOFTWARE](SETUP.md) |  [Setup Guide](../docs/SETUP.md)
