@@ -19,7 +19,7 @@ This guide focuses on transforming raw ONT sequencing data into annotated bacter
 1. [QC](01_QC.md)
 2. [Assembly](02_ASSEMBLY.md)
 3. [Annotation](03_ANNOTATION.md)
-   3.1 [Online tools](03_ANNOTATION-alternatives.md)
+   - [Online tools](03_ANNOTATION-alternatives.md)
 4. [Comparisons](04_COMPARISON.md)
 5. [Pathways](05_PATHWAYS.md)
 6. [Gene screening](06_GENE-SCREENING.md)
