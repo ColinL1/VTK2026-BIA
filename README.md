@@ -1,243 +1,152 @@
-# VTK2026-Bacterial Isolate Assembly
+# VTK2026 - Bacterial Isolate Assembly
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## Overview
 
-This repository contains a complete bioinformatics workflow for analyzing Oxford Nanopore Technology (ONT) sequencing data from bacterial isolates. Designed for the **[Voolstra lab](https://www.biologie.uni-konstanz.de/voolstra/) 2026 VTK**, this pipeline guides through quality control, genome assembly, functional annotation, comparative genomics, and metabolic pathway analysis.
+This repository contains a complete bioinformatics workflow for analyzing **Oxford Nanopore Technology (ONT)** sequencing data from bacterial isolates. Designed for the **[Voolstra lab](https://www.biologie.uni-konstanz.de/voolstra/) 2026 VTK**, this tutorial guides you through quality control, de novo genome assembly, functional annotation, comparative genomics, pathway analysis, and gene screening.
 
-### Objectives
-
-1. **Quality Control**: Assess and filter ONT sequencing data
-2. **Assembly**: De novo genome assembly without reference genomes
-3. **Annotation**: Taxon-independent functional annotation
-4. **Gene Screening**: Identify secondary metabolites, AMR, and coral-specific traits
-5. **Comparative Genomics**: Pangenome analysis and phylogenomics
-6. **Pathway Analysis**: Reconstruct metabolic pathways and coral symbiosis functions
-
-### Key Features
-
-- **Complete workflow**: From raw reads to publication-ready analyses
-- **Gene-focused**: Screens for relevant genes and pathways
-- **Reproducible**: Conda environment with all dependencies
-<!-- - **Multi-level comparisons**: Strain, species, and genus-level analyses #TODO: add back in it? --> 
+**The course focuses on going form raw ONT reads to annotated bacterial genomes without requiring reference sequences.**
 
 ---
 
-## Detailed Documentation
-
-- **[Setup Guide](docs/SETUP.md)**: Installation, database downloads, and troubleshooting
-- **[Guide](docs/README.md)**: Quality control, assembly, and annotation, etc.
-- **[Introduction to CLI](https://github.com/ColinL1/CLI-exercises)**: Basics of command-line usage
+> **Note:** For a fully automated workflow, check out the [Nextflow version](https://github.com/ColinL1/ONT-Bacterial-Assembly/) of this pipeline, which streamlines batch processing and reproducibility across multiple samples.
 
 ---
 
-## Repository Structure
+## Learning Objectives
 
+By completing this workshop, you will be able to:
+
+- Assess and improve ONT read quality
+- Perform de novo genome assembly
+- Evaluate assembly quality metrics
+- Annotate genes and predict functions
+- Identify biosynthetic gene clusters and AMR genes
+- Compare genomes using ANI and pangenome analysis
+- Reconstruct and visualize metabolic pathways
+- Interpret results in an ecological context
+
+---
+
+## Course Structure
+
+This workshop is organized into six main tutorials:
+
+1. **[Quality Control](docs/01_QC.md)** - Assess, trim, and filter ONT reads
+2. **[Genome Assembly](docs/02_ASSEMBLY.md)** - De novo assembly with Flye and Medaka
+3. **[Functional Annotation](docs/03_ANNOTATION.md)** - Gene prediction with Bakta
+4. **[Comparative Genomics](docs/04_COMPARISON.md)** - ANI analysis and pangenome characterization
+5. **[Pathway Analysis](docs/05_PATHWAYS.md)** - KEGG pathway reconstruction
+6. **[Gene Screening](docs/06_GENE-SCREENING.md)** - Detect BGCs, AMR, and trait-specific genes
+
+### Additional Resources
+
+- **[Introduction to File Formats](docs/INTRODUCTION.md)** - FASTA, FASTQ, GFF, and quality scores
+- **[Setup Guide](docs/SETUP.md)** - Installation, database downloads, and environment configuration
+- **[CLI Basics](https://github.com/ColinL1/CLI-exercises)** - Command-line fundamentals
+
+---
+
+## Quick Start
+
+See [Setup Guide](docs/SETUP.md) for complete installation instructions.
+
+### 2. Run the Pipeline
+
+**Manual approach (recommended for learning):**
+Follow the step-by-step tutorials in [docs/](docs/README.md)
+
+**Automated approach (for batch processing):**
+Use the provided scripts:
+
+```bash
+# Quality control
+bash scripts/01_quality_control.sh <sample_name.fastq.gz> 8
+
+# Assembly
+bash scripts/02_assembly.sh <sample_name> 8
+
+# Annotation
+bash scripts/03_annotation.sh <sample_name> 8
+
+# Gene screening
+bash scripts/04_gene_screening.sh <sample_name> 8
 ```
-VTK2026/
-├── README.md                       # This file
-├── env_files                       # Conda environment specification
-├── data/
-│   ├── raw_reads/                  # ONT sequencing data (.fastq.gz)
-│   ├── metadata/               
-│   │   └── sample_info.csv         # Sample metadata (if needed)
-│   └── custom_gene_databases/      # Reference sequences for screening
-├── scripts/                        # Analysis scripts  (released at the end of each module) 
-│   ├── 01_quality_control.sh       # QC and filtering
-│   ├── 02_assembly.sh              # Flye + Medaka assembly
-│   ├── 03_annotation.sh            # Bakta annotation
-|   ├── 04_gene_screening.sh        # antiSMASH, ABRicate, custom genes
-|   ├── 05_comparative_genomics.sh  # OrthoFinder, ANI, pangenome
-|   ├── 06_pathway_analysis.sh      # KEGG pathways, visualization
-|   └── helpers/
-├── results/                        # All output files (generated)
-│   ├── qc/                         # Quality control reports
-│   ├── assembly/                   # Genome assemblies
-│   ├── screening/                  # Trait and gene screening
-│   ├── annotation/                 # Gene annotations
-│   ├── comparative/                # Comparative genomics
-│   └── pathways/                   # Pathway analysis
-└── docs/
-    ├── INTRODUCTION.md
-    ├── README.md
-    ├── SETUP.md
-    ├── TUTORIAL_01_QC.md
-    ├── TUTORIAL_02_ASSEMBLY.md
-    ├── TUTORIAL_03_ANNOTATION.md
-    └── ETC...
-```
-
----
-
-## Pipeline Workflow
-
-### Day 1-2: Quality Control and Preprocessing
-
-<!-- **Script**: `scripts/01_quality_control.sh` -->
-
-**Tools**: NanoPlot, NanoStat, Porechop_ABI, Filtlong
-
-**Objectives**:
-
-- Assess raw ONT read quality and yield
-- Trim adapter sequences
-- Filter to 100x coverage with highest quality reads
-- Remove short reads (<1 kb)
 <!-- 
-```bash
-bash scripts/01_quality_control.sh <sample_id> <threads>
-``` -->
+# Comparative genomics (requires multiple samples)
+bash scripts/05_comparative_genomics.sh all 8
 
-### Day 3-4: Genome Assembly
-
-<!-- **Script**: `scripts/02_assembly.sh` -->
-
-**Tools**: Flye, Medaka, QUAST, BUSCO
-
-**Objectives**:
-
-- De novo assembly with Flye
-- Consensus polishing with Medaka
-- Quality assessment (N50, L50, contig count)
-- Completeness evaluation with BUSCO
-
-**Expected**: 3-5 MB genomes, 1-10 contigs, >90% BUSCO completeness
-<!-- 
-```bash
-bash scripts/02_assembly.sh <sample_id> <threads> <genome_size>
-``` -->
-
-### Day 5: Taxon-Independent Functional Annotation
-
-<!-- **Script**: `scripts/03_annotation.sh` -->
-
-**Tools**: Bakta
-
-**Objectives**:
-
-- Predict genes and functional annotations
-- Assign EC numbers, GO terms, COG categories
-- Minimize "hypothetical proteins" using comprehensive database
-- Generate GenBank, GFF3, and FASTA outputs
-<!-- 
-```bash
-bash scripts/03_annotation.sh <sample_id> <threads>
-``` -->
-
----
-
-### Week 2: Comparative and Functional Genomics
-
-### Day 6-7: Gene and Trait Screening
-
-<!-- **Script**: `scripts/04_gene_screening.sh` -->
-
-**Tools**: antiSMASH, ABRicate, AMRFinderPlus, BLAST
-
-**Objectives**:
-
-- Detect secondary metabolite biosynthetic gene clusters
-- Screen for antimicrobial resistance genes
-- Identify nitrogen cycling genes (nif, nir, nor, nos)
-- Find DMSP degradation pathways (dmdA, ddd genes)
-- Detect Type VI secretion systems
-- Assess vitamin biosynthesis capabilities
-<!-- 
-```bash
-bash scripts/04_gene_screening.sh <sample_id> <threads>
-``` -->
-
-### Day 8-9: Strain-Level and Species-Level Comparisons
-
-<!-- **Script**: `scripts/05_comparative_genomics.sh` -->
-
-**Tools**: FastANI, OrthoFinder
-
-**Objectives**:
-- Calculate Average Nucleotide Identity (ANI >95% = same species)
-- Cluster orthologous genes across genomes
-- Define core vs accessory genomes
-- Identify source-specific genes (F003 vs H2)
-- Build phylogenomic trees
-
-**Multi-level analysis**:
-- Species-level: Within *M. enclense*, *M. ginsengisoli*, *A. portus*
-- Genus-level: All *Microbacterium*, all *Alteromonas*
-- Cross-genus: All 12 isolates
-<!-- 
-```bash
-# Species-level comparison
-bash scripts/05_comparative_genomics.sh species <threads>
-
-# Genus-level comparison
-bash scripts/05_comparative_genomics.sh genus <threads>
-
-# All isolates
-bash scripts/05_comparative_genomics.sh all <threads>
-``` -->
-
-### Day 10: Pathway Analysis and Coral-Context Integration
-
-<!-- **Script**: `scripts/06_pathway_analysis.sh` -->
-
-**Tools**: KEGG Mapper, custom Python scripts
-
-**Objectives**:
-- Extract EC numbers, GO terms, COG categories
-- Map to KEGG metabolic pathways
-- Assess pathway completeness for coral-relevant functions:
-  - Nitrogen metabolism
-  - Sulfur metabolism (DMSP)
-  - Vitamin biosynthesis (B12, B1, B2)
-  - Oxidative stress response
-- Compare metabolic profiles across samples
-- Visualize pathway distributions
-<!-- 
-```bash
-# Individual sample
-bash scripts/06_pathway_analysis.sh <sample_id> <threads>
-
-# Comparative analysis
-bash scripts/06_pathway_analysis.sh comparative <threads>
-``` -->
+# Pathway analysis
+bash scripts/06_pathway_analysis.sh <sample_name> 8 -->
 
 ---
 
 ## Expected Outcomes
 
-By completing this workshop, students will generate:
+By completing this workshop, you will have generated:
 
-1. **high-quality genome assemblies** with comprehensive quality metrics
-2. **Functional annotations** with COG, GO, and EC classifications
-3. **Trait screening results** for coral-relevant genes and pathways
-4. **Pangenome analyses** at multiple taxonomic levels
-5. **Metabolic pathway reconstructions** focused on coral symbiosis
-6. **Publication-ready figures** and summary tables
+1. **High-quality genome assemblies** with comprehensive quality metrics (N50, BUSCO)
+2. **Functional annotations** with COG, GO, and EC classifications for all genes
+3. **Gene screening results** identifying BGCs, AMR genes, and ecological traits
+4. **Comparative genomics analyses** including:
+   - ANI matrices showing species relationships
+   - Pangenome characterization (core/accessory/unique genes)
+   - Phylogenomic trees
+5. **Metabolic pathway reconstructions** using KEGG annotations
+6. **Publication-ready visualizations** and summary tables
 
----
+### Skills Gained
 
-## Installation
-
-See [docs/SETUP.md](docs/SETUP.md) for detailed installation instructions.
-
----
-
-## License
-
-MIT License - see LICENSE file for details
-
----
-
-## Support
-
-For issues or questions:
-1. Check [docs/SETUP.md](docs/SETUP.md) troubleshooting section
-2. Review [docs/README.md](docs/README.md) for guidance
-3. Check individual tool documentation
+- Command-line proficiency for bioinformatics analyses
+- Understanding of ONT sequencing data characteristics
+- Experience with industry-standard genomics tools
+- Ability to interpret genomic data in ecological context
+- Critical evaluation of assembly and annotation quality
 
 ---
 
-## Acknowledgments
+## Key Tools and Technologies
 
-This workshop was designed for teaching bacterial genomics with a focus on coral-associated microbiomes. Special thanks to the developers of all open-source bioinformatics tools used in this pipeline.
+| Tool | Purpose | Tutorial |
+|------|---------|----------|
+| NanoPlot | Read quality visualization | 1 |
+| Porechop_ABI | Adapter trimming | 1 |
+| Filtlong | Quality-based read filtering | 1 |
+| Flye | De novo genome assembly | 2 |
+| Medaka | Assembly polishing | 2 |
+| QUAST | Assembly quality assessment | 2 |
+| BUSCO | Completeness evaluation | 2 |
+| Bakta | Comprehensive genome annotation | 3 |
+| FastANI | Average Nucleotide Identity | 4 |
+| OrthoFinder | Ortholog clustering, pangenome | 4 |
+| KofamScan | KEGG orthology assignment | 5 |
+| KEGG-decoder | Pathway visualization | 5 |
+| antiSMASH | Biosynthetic gene cluster detection | 6 |
+| ABRicate | AMR gene screening | 6 |
+| AMRFinderPlus | Comprehensive AMR analysis | 6 |
+
+---
+
+## Prerequisites
+
+- **Basic command-line skills** (recommended: [CLI exercises](https://github.com/ColinL1/CLI-exercises))
+- **Conda/Mamba** installed ([installation guide](docs/SETUP.md))
+- **~50-100 GB free disk space** for databases and results
+- **ONT sequencing data** (FASTQ format)
+
+---
+
+## Citation and License
+
+This workshop was designed for teaching bacterial genomics with a focus on coral-associated microbiomes at the University of Konstanz.
+
+**License:** MIT License - see [LICENSE](LICENSE) file for details
+
+### Tool Citations
+
+Please cite the tools you use in your analyses.
+
+---
+
+**Ready to start?** Begin with the [Setup Guide](docs/SETUP.md) or dive into [Tutorial 1: Quality Control](docs/01_QC.md)!
