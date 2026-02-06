@@ -72,7 +72,7 @@ KEGG-decoder -i sample_list.txt -o comparative_pathways.pdf
 ### 2.3 Customizing Output
 ```bash
 # Generate heatmap for comparison
-KEGG-decoder -i *.txt -o pathways_heatmap.pdf --vizoptions static
+KEGG-decoder -i *.txt -o pathways_heatmap.pdf -v static
 
 # Export as interactive HTML
 KEGG-decoder -i *.txt -o pathways.html --vizoptions interactive
