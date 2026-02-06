@@ -33,6 +33,8 @@ KEGG-decoder -h
 # Basic KofamScan command
 exec_annotation -o output.txt \
     --format detail-tsv \
+    --ko-list ~/databases/kofamscan/ko_list
+    --profile ~/databases/kofamscan/profiles
     --cpu 4 \
     proteins.faa
 
