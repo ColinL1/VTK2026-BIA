@@ -25,6 +25,11 @@ flye --version
 medaka --version
 quast.py --version
 busco --version
+seqkit version
+bioawk -h
+
+# Install if missing:
+# conda install -c bioconda seqkit bioawk
 ```
 
 ### Required Input
@@ -61,7 +66,7 @@ mkdir -p results/assembly/F003_M_enclense/qc
 ### Why No Reference for Our Samples?
 
 Our coral-associated bacteria (*Microbacterium enclense*, *M. ginsengisoli*, *Alteromonas portus*) are:
-- Lack high-quality complete genome references
+- Species that lack high-quality complete genome references
 - May have unique genomic features
 
 ### Long Reads vs. Short Reads
@@ -131,7 +136,7 @@ flye \
     --genome-size 3.5m \
     --threads 4 \
     --out-dir results/assembly/F003_M_enclense/flye \
-    --iterations 3 \
+    --iterations 2 \
     --meta
 ```
 
@@ -351,9 +356,8 @@ zcat data/raw_reads/F003_M_enclense.fastq.gz | head -1
 **Most likely for 2026 data:**
 - Flow cell: R10.4.1 or newer
 - Basecaller: Dorado SUP (super-accurate)
-- Model: `r1041_e82_400bps_sup_v5.2.0` or `r1041_e82_400bps_sup_v4.2.0`
-
-**If unsure:** Use `r1041_e82_400bps_sup_v4.2.0` (compatible with most recent data)
+- Model: `r1041_e82_400bps_sup_v5.2.0` (or `r1041_e82_400bps_sup_v4.2.0` if v5.2.0 unavailable)
+- **Note:** Verify available models with `medaka tools list_models` before running
 
 ### 3.4 Copy Draft Assembly
 
@@ -380,6 +384,7 @@ medaka_consensus \
 - `-d`: Draft assembly to polish
 - `-o`: Output directory
 - `-t`: Number of threads
+- `-m`: Medaka model (use `r1041_e82_400bps_sup_v5.2.0` or fallback to `r1041_e82_400bps_sup_v4.2.0`)
 - `-m`: Medaka model (match your basecaller!)
 
 **⏱️ Runtime:** ~20 minutes
@@ -542,13 +547,17 @@ Cumulative:
 ### 5.2 Download BUSCO Database
 
 ```bash
-# Download bacteria lineage dataset (one-time setup)
+# Create database directory (one-time setup)
+mkdir -p ~/databases/busco/busco_downloads
+
+# List available datasets
 busco --list-datasets
 
-# Download specific dataset
-busco --download bacteria_odb10
+# Download specific dataset with explicit path
+busco --download bacteria_odb10 --download_path ~/databases/busco/busco_downloads
 
-# Database installed to: ~/databases/busco/busco_downloads
+# Verify download location
+ls ~/databases/busco/busco_downloads/
 ```
 
 ### 5.3 Run BUSCO
@@ -649,9 +658,22 @@ cat results/assembly/F003_M_enclense/qc/F003_M_enclense_busco/run_bacteria_odb10
 cat results/assembly/F003_M_enclense/qc/F003_M_enclense_busco/run_bacteria_odb10/fragmented_busco_list.txt
 ```
 
-### 5.7 Additional Quality Check with CheckM2
+### 5.7 Setup CheckM2 Database (First Time Only)
 
 **CheckM2** provides an alternative completeness assessment using machine learning, and directly estimates contamination levels that BUSCO doesn't quantify.
+
+```bash
+# One-time database setup (~3.5 GB download, ~20-30 min)
+mkdir -p ~/databases/CheckM2_database
+
+checkm2 database --download --path ~/databases/CheckM2_database
+
+# Verify database files
+ls ~/databases/CheckM2_database/
+# Should see: uniref100.KO.1.dmnd and other files
+```
+
+### 5.8 Run CheckM2
 
 ```bash
 # Run CheckM2 on polished assembly
@@ -670,7 +692,7 @@ Parameter explanation:
 
 **⏱️ Runtime:** 5-15 minutes for a typical bacterial genome
 
-### 5.8 View CheckM2 Results
+### 5.9 View CheckM2 Results
 ```bash
 # View the main output table
 cat results/assembly/F003_M_enclense/qc/checkm2/quality_report.tsv
@@ -755,8 +777,14 @@ tail -n 1 results/assembly/F003_M_enclense/qc/checkm2/quality_report.tsv | \
 <details>
 <summary>If contamination >2%:</summary>
 
+**Setup Kraken2 database (first time only, ~50+ GB download):**
 ```bash
-# Screen for contaminating taxa
+mkdir -p ~/databases/kraken2/standard
+kraken2-build --standard --db ~/databases/kraken2/standard --threads 4
+```
+
+**Screen for contaminating taxa:**
+```bash
 kraken2 \
     --db ~/databases/kraken2/standard \
     --threads 4 \

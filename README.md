@@ -6,7 +6,7 @@
 
 This repository contains a complete bioinformatics workflow for analyzing **Oxford Nanopore Technology (ONT)** sequencing data from bacterial isolates. Designed for the **[Voolstra lab](https://www.biologie.uni-konstanz.de/voolstra/) 2026 VTK**, this tutorial guides you through quality control, de novo genome assembly, functional annotation, comparative genomics, pathway analysis, and gene screening.
 
-**The course focuses on going form raw ONT reads to annotated bacterial genomes without requiring reference sequences.**
+**The course focuses on going from raw ONT reads to annotated bacterial genomes without requiring reference sequences.**
 
 ---
 
@@ -49,6 +49,8 @@ This workshop is organized into six main tutorials:
 ---
 
 ## Quick Start
+
+### 1. Setup
 
 See [Setup Guide](docs/SETUP.md) for complete installation instructions.
 

@@ -8,6 +8,10 @@ set -u  # Exit on undefined variable
 # Get paths
 BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
+# KofamScan environment variables (set these before running if using KofamScan)
+KOFAMSCAN_PROFILES="${KOFAMSCAN_PROFILES:-}"
+KOFAMSCAN_KO_LIST="${KOFAMSCAN_KO_LIST:-}"
+
 # Parse command line arguments
 SAMPLE_ID=${1:-""}
 THREADS=${2:-8}
@@ -44,7 +48,6 @@ echo "Checking input files..."
 
 # Find annotation files
 TSV_FILE="${ANNOTATION_DIR}/${SAMPLE_ID}/${SAMPLE_ID}.tsv"
-GFF_FILE="${ANNOTATION_DIR}/${SAMPLE_ID}/${SAMPLE_ID}.gff3"
 PROTEIN_FILE="${ANNOTATION_DIR}/${SAMPLE_ID}/${SAMPLE_ID}.faa"
 
 if [ ! -f "$TSV_FILE" ]; then
@@ -145,6 +148,7 @@ print()
 
 # Read EC numbers
 ec_file = Path("${PATHWAY_DIR}/${SAMPLE_ID}/ec_numbers.txt")
+ec_numbers = set()
 if ec_file.exists():
     with open(ec_file) as f:
         ec_numbers = set(line.strip() for line in f if line.strip())
@@ -155,7 +159,13 @@ if ec_file.exists():
 for pathway_name, details in CORAL_PATHWAYS.items():
     print(f"{pathway_name}:")
     print(f"  Importance: {details['importance']}")
-    print(f"  Key genes to look for: {', '.join(details['genes'])}")
+    
+    # Check for gene presence (basic matching on gene name substrings)
+    genes_found = [g for g in details['genes'] if any(g.lower() in ec.lower() for ec in ec_numbers)]
+    if genes_found:
+        print(f"  Detected genes: {', '.join(genes_found)}")
+    else:
+        print(f"  Key genes to look for: {', '.join(details['genes'])}")
     print()
 
 print()
@@ -293,9 +303,6 @@ echo "Next steps:"
 echo "  - Upload EC numbers to KEGG Mapper: https://www.genome.jp/kegg/mapper/"
 echo "  - Run comparative pathway analysis: $0 comparative"
 echo ""
-echo "✓ Pathway analysis pipeline complete for ${SAMPLE_ID}"
-echo "========================================="
-
 
 # Step 6: KofamScan analysis for KEGG Orthology assignment ##### untested
 echo ""
@@ -308,7 +315,13 @@ if ! command -v exec_annotation &> /dev/null; then
     echo "Warning: KofamScan not found in PATH. Skipping KofamScan analysis."
     echo "  Install from: https://github.com/takaram/kofam_scan"
 else
-    if [ ! -f "$PROTEIN_FILE" ]; then
+    if [ -z "${KOFAMSCAN_PROFILES}" ] || [ -z "${KOFAMSCAN_KO_LIST}" ]; then
+        echo "Warning: KOFAMSCAN_PROFILES or KOFAMSCAN_KO_LIST not set."
+        echo "  Set environment variables before running:"
+        echo "    export KOFAMSCAN_PROFILES=/path/to/profiles"
+        echo "    export KOFAMSCAN_KO_LIST=/path/to/ko_list"
+        echo "  Skipping KofamScan analysis"
+    elif [ ! -f "$PROTEIN_FILE" ]; then
         echo "Warning: Protein file not found: ${PROTEIN_FILE}"
         echo "  Skipping KofamScan analysis"
     else
@@ -316,8 +329,8 @@ else
         echo "Running KofamScan on ${PROTEIN_FILE}..."
         
         exec_annotation \
-            -p /home/colinl/databases/kofamscan/profiles/ \
-            -k /home/colinl/databases/kofamscan/ko_list \
+            -p "${KOFAMSCAN_PROFILES}" \
+            -k "${KOFAMSCAN_KO_LIST}" \
             -o "${KOFAMSCAN_DIR}/kofamscan_results.txt" \
             --cpu "${THREADS}" \
             --format detail-tsv \
@@ -358,3 +371,8 @@ KOEOF
         fi
     fi
 fi
+
+echo ""
+echo "========================================="
+echo "✓ Pathway analysis pipeline complete for ${SAMPLE_ID}"
+echo "========================================="

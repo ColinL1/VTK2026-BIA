@@ -282,15 +282,12 @@ library(reshape2)
 library(pheatmap)
 library(RColorBrewer)
 
-# Read ANI matrix
-ani_matrix <- read.table('results/comparative/ani/ani_matrix.tsv', header=TRUE, row.names=1, sep='\t')
+# Read ANI data
 data <- read.table('results/comparative/ani/ani_matrix.tsv', header=FALSE, sep='\t')
 colnames(data) <- c('Query', 'Reference', 'ANI', 'Matches', 'Fragments')
 
 # Convert to matrix format
 ani_matrix <- xtabs(data[[3]] ~ data[[1]] + data[[2]])
-# Replace NA with 0 for visualization purposes
-ani_matrix[is.na(ani_matrix)] <- 0
 
 # Convert to numeric matrix
 ani_mat <- as.matrix(ani_matrix)
@@ -612,8 +609,12 @@ library(gridExtra)
 library(dplyr)
 library(tidyr)
 
-# Find and read orthogroups file
-og_file <- "results/comparative/orthofinder/OrthoFinder/Results_Feb04/Orthogroups/Orthogroups.GeneCount.tsv"
+# Find and read orthogroups file dynamically
+results_dir <- system("find results/comparative/orthofinder/orthofinder_results -name 'Results_*' -type d", intern=TRUE)
+if (length(results_dir) > 1) {
+  results_dir <- results_dir[length(results_dir)]  # Use most recent
+}
+og_file <- file.path(results_dir, "Orthogroups", "Orthogroups.GeneCount.tsv")
 df <- read.table(og_file, header=TRUE, sep='\t', row.names=1)
 
 # Get genome columns (exclude Total if present)
@@ -768,7 +769,11 @@ library(ape)
 library(phytools)
 
 # Find and read tree file
-tree_file <- "results/comparative/orthofinder/OrthoFinder/Results_Feb04/Species_Tree/SpeciesTree_rooted.txt"
+results_dir <- system("find results/comparative/orthofinder/orthofinder_results -name 'Results_*' -type d", intern=TRUE)
+if (length(results_dir) > 1) {
+  results_dir <- results_dir[length(results_dir)]  # Use most recent
+}
+tree_file <- file.path(results_dir, "Species_Tree", "SpeciesTree_rooted.txt")
 
 cat("Reading tree from:", tree_file, "\n")
 tree <- read.tree(tree_file)
@@ -1033,8 +1038,11 @@ echo "- HGT-Finder (phylogenetic)"
 ```bash
 # If OrthoFinder runs out of memory:
 # - Reduce thread count: -t 4 instead of -t 8
-# - Use faster mode: -S blast instead of -S diamond
-# - Skip MSA: remove -M msa flag
+# - Use faster, less memory-intensive mode: -S diamond (default, recommended)
+# - Skip MSA for lower memory usage: remove -M msa flag
+
+# For more sensitive (but slower and more memory-intensive) results:
+# - Use BLAST: -S blast (note: slower than diamond)
 ```
 
 ### Missing Dependencies

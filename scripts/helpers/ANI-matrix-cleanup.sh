@@ -1,10 +1,16 @@
 #!/bin/bash
+set -euo pipefail
 
 # Usage: script.sh <matrix_file> <pattern_to_remove>
 # Example: script.sh ani_matrix.txt polished.fa
 
 MATRIX_FILE="${1:-ani_matrix.txt}"
 PATTERN="${2:-polished.fa}"
+
+if [[ ! -f "$MATRIX_FILE" ]]; then
+    echo "Error: Matrix file '$MATRIX_FILE' not found." >&2
+    exit 1
+fi
 
 # Step 1: Extract genome names and create header
 echo "Creating formatted ANI matrix..."

@@ -25,7 +25,24 @@ ASSEMBLY="${1}"
 GFF="${2}"
 PROTEIN_FASTA="${3}"
 THREADS="${4:-8}"
-OUTPUT_BASE_DIR="${5:-.}/results"
+OUTPUT_BASE_DIR="${5:-./results}"
+
+# Convert to absolute paths
+# Verify input files exist
+if [ ! -f "$ASSEMBLY" ]; then
+    echo "Error: Assembly not found: ${ASSEMBLY}"
+    exit 1
+fi
+
+if [ ! -f "$GFF" ]; then
+    echo "Error: GFF file not found: ${GFF}"
+    exit 1
+fi
+
+if [ ! -f "$PROTEIN_FASTA" ]; then
+    echo "Error: Protein FASTA not found: ${PROTEIN_FASTA}"
+    exit 1
+fi
 
 # Convert to absolute paths
 ASSEMBLY="$(cd "$(dirname "${ASSEMBLY}")" && pwd)/$(basename "${ASSEMBLY}")"
@@ -89,9 +106,11 @@ echo "✓ antiSMASH complete"
 
 # Step 2: AMR gene screening with ABRicate
 echo ""
-echo "Step 2: Screening for antimicrobial resistance genes..."
-
-# Update ABRicate databases
+# Combine results
+echo "FILE	SEQUENCE	START	END	GENE	COVERAGE	COVERAGE_MAP	GAPS	%COVERAGE	%IDENTITY	DATABASE	ACCESSION" > "${SCREENING_DIR}/amr/${SAMPLE_ID}_amr_all.tab"
+for DB in card ncbi resfinder; do
+    grep -v "^#" "${SCREENING_DIR}/amr/${SAMPLE_ID}_${DB}.tab" >> "${SCREENING_DIR}/amr/${SAMPLE_ID}_amr_all.tab" 2>/dev/null || true
+done
 echo "Updating ABRicate databases..."
 abricate --setupdb
 
@@ -124,9 +143,9 @@ amrfinder \
 
 echo "✓ AMRFinderPlus complete"
 
-# Step 5: Generate screening summary
+# Step 4: Generate screening summary
 echo ""
-echo "Step 5: Generating screening summary..."
+echo "Step 4: Generating screening summary..."
 
 SUMMARY_FILE="${SCREENING_DIR}/${SAMPLE_ID}_screening_summary.txt"
 

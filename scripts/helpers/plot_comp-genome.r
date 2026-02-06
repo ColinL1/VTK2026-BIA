@@ -65,17 +65,17 @@ p2 <- ggplot(comp_df, aes(x="", y=count, fill=category)) +
   geom_text(aes(label=label), position=position_stack(vjust=0.5), size=3)
 
 # Plot 3: Total genes per genome
-genes_per_genome <- colSums(df[, genome_cols] > 0)
-genes_df <- data.frame(genome = names(genes_per_genome),
-                       n_genes = as.numeric(genes_per_genome))
+orthogroups_per_genome <- colSums(df[, genome_cols] > 0)
+orthogroups_df <- data.frame(genome = names(orthogroups_per_genome),
+                             n_orthogroups = as.numeric(orthogroups_per_genome))
 
-p3 <- ggplot(genes_df, aes(x=reorder(genome, n_genes), y=n_genes)) +
+p3 <- ggplot(orthogroups_df, aes(x=reorder(genome, n_orthogroups), y=n_orthogroups)) +
   geom_bar(stat="identity", fill="steelblue") +
-  geom_text(aes(label=n_genes), hjust=-0.2, size=3) +
+  geom_text(aes(label=n_orthogroups), hjust=-0.2, size=3) +
   coord_flip() +
-  labs(title="Total Genes per Genome",
+  labs(title="Orthogroups per Genome",
        x="Genome",
-       y="Number of Genes") +
+       y="Number of Orthogroups") +
   theme_bw() +
   theme(plot.title = element_text(face="bold", hjust=0.5))
 

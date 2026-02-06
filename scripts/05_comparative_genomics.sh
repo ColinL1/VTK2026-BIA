@@ -10,6 +10,12 @@ set -u  # Exit on undefined variable
 SAMPLE_PATTERN=${1:-""}
 THREADS=${2:-8}
 
+# Validate THREADS
+if ! [[ "$THREADS" =~ ^[0-9]+$ ]] || [ "$THREADS" -lt 1 ]; then
+    echo "Error: THREADS must be a positive integer" >&2
+    exit 1
+fi
+
 if [ -z "$SAMPLE_PATTERN" ]; then
     echo "Usage: $0 <sample_pattern|all> [threads]"
     echo ""
@@ -56,7 +62,7 @@ else
     for PATTERN in ${SAMPLE_PATTERN}; do
         # Handle wildcards
         if [[ "$PATTERN" == *"*"* ]]; then
-            find "${ASSEMBLY_DIR}" -name "${PATTERN}" -name "*_polished.fasta" >> genome_list.txt
+            find "${ASSEMBLY_DIR}" -name "${PATTERN}_polished.fasta" >> genome_list.txt
         else
             # Look for specific sample directory
             if [ -d "${ASSEMBLY_DIR}/${PATTERN}" ]; then
@@ -135,7 +141,7 @@ BEGIN {OFS="\t"}
     genomes[$2] = 1;
 }
 END {
-    # Sort genome names
+    # Sort genome names using gawk
     n = asorti(genomes, sorted);
 
     # Print header
@@ -236,7 +242,7 @@ echo "✓ OrthoFinder analysis complete"
 echo ""
 echo "Step 6: Processing OrthoFinder results..."
 
-RESULTS_DIR=$(find "${COMPARATIVE_DIR}/orthofinder" -name "Results_*" -type d | head -1)
+RESULTS_DIR=$(find "${COMPARATIVE_DIR}/orthofinder" -name "Results_*" -type d -printf '%T@ %p\n' | sort -rn | head -1 | cut -d' ' -f2-)
 
 if [ -z "$RESULTS_DIR" ] || [ ! -d "$RESULTS_DIR" ]; then
     echo "Warning: OrthoFinder results directory not found"
@@ -319,9 +325,15 @@ else
         echo "PANGENOME SUMMARY"
         echo "=========================================================="
         echo "Total orthogroups: ${TOTAL_OG}"
-        echo "Core genes (100%):      ${CORE_COUNT} ($(awk "BEGIN {printf \"%.1f\", 100*${CORE_COUNT}/${TOTAL_OG}")%)"
-        echo "Accessory genes:        ${ACCESSORY_COUNT} ($(awk "BEGIN {printf \"%.1f\", 100*${ACCESSORY_COUNT}/${TOTAL_OG}")%)"
-        echo "Unique genes (1 genome): ${UNIQUE_COUNT} ($(awk "BEGIN {printf \"%.1f\", 100*${UNIQUE_COUNT}/${TOTAL_OG}")%)"
+        if [ "$TOTAL_OG" -gt 0 ]; then
+            echo "Core genes (100%):      ${CORE_COUNT} ($(awk "BEGIN {printf \"%.1f\", 100*${CORE_COUNT}/${TOTAL_OG}}")%)"
+            echo "Accessory genes:        ${ACCESSORY_COUNT} ($(awk "BEGIN {printf \"%.1f\", 100*${ACCESSORY_COUNT}/${TOTAL_OG}}")%)"
+            echo "Unique genes (1 genome): ${UNIQUE_COUNT} ($(awk "BEGIN {printf \"%.1f\", 100*${UNIQUE_COUNT}/${TOTAL_OG}}")%)"
+        else
+            echo "Core genes (100%):      ${CORE_COUNT} (N/A)"
+            echo "Accessory genes:        ${ACCESSORY_COUNT} (N/A)"
+            echo "Unique genes (1 genome): ${UNIQUE_COUNT} (N/A)"
+        fi
         echo "=========================================================="
 
         echo ""

@@ -68,8 +68,10 @@ KofamScan produces tab-separated files with KO assignments for each protein.
 ```
 
 **Column descriptions:**
+- **\***: Marker in the first column indicating the hit exceeds the significance threshold
 - **gene name**: Protein/gene identifier from input FASTA
-- **KO**: KEGG Orthology identifier (or `*` if no significant hit)
+- **KO**: KEGG Orthology identifier
+- **thrshld**: Score threshold for the KO
 - **thrshld**: Score threshold for the KO
 - **score**: Alignment score
 - **E-value**: Expected value (statistical significance)
@@ -112,24 +114,22 @@ Note: Proteins without KO assignments are omitted in mapper format.
 If you have detail-tsv output but need mapper format for KEGG-decoder, you can convert it using standard Unix tools:
 
 ```bash
-# Convert single file (skip header, filter out non-hits, extract columns 1-2)
+# Convert single file (skip header, filter for KO assignments, extract columns 2-3)
 grep -v '^#' genome_kofam_detail.txt | \
-    grep -w '*' | \
-        cut -f2,3 > genome_kofam_mapper.txt
+    awk '$1 == "*" {print $2"\t"$3}' > genome_kofam_mapper.txt
 
 # Batch conversion for multiple files
 for file in *_detail.txt; do
     base=$(basename ${file} _detail.txt)
     grep -v '^#' ${file} | \
-        grep -w '*' | \
-            cut -f2,3 > ${base}_mapper.txt
+        awk '$1 == "*" {print $2"\t"$3}' > ${base}_mapper.txt
 done
 ```
 
 **Explanation:**
-- `grep -v '^#'`: Remove comment lines starting with #
-- `grep -w '*'`: Filter out proteins without KO assignments
-- `cut -f2,3` or `print $2"\t"$3`: Extract only gene name and KO columns
+- `grep -v '^#'`: Removes comment lines beginning with #
+- `awk '$1 == "*" {print $2"\t"$3}'`: Keeps only proteins with KO assignments (above threshold)
+- Output: gene name and KO columns
 
 </details> 
 

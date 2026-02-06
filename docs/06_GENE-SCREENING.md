@@ -143,20 +143,21 @@ antiSMASH can use either:
 - **GenBank file** (pre-annotated) → Uses existing annotations
 
 ```bash
-# We'll use the polished assembly (FASTA)
+# We'll use the polished assembly (FASTA) and pre-existing annotations
 SAMPLE="F003_M_enclense"
 ASSEMBLY="results/assembly/${SAMPLE}/${SAMPLE}_polished.fasta"
+GFF="results/annotation/${SAMPLE}/${SAMPLE}.gff3"
 
-# Verify file exists
-ls -lh $ASSEMBLY
+# Verify files exist
+ls -lh $ASSEMBLY $GFF
 ```
 
-**💡 Tip:** Using GenBank from Prokka/Bakta provides better annotations, but FASTA is sufficient.
+**💡 Tip:** Using GenBank from Prokka/Bakta or GFF provides better annotations than having antiSMASH predict genes de novo.
 
 ### 1.4 Run antiSMASH
 
 ```bash
-# Run antiSMASH
+# Run antiSMASH with pre-existing annotations
 antismash \
     --genefinding-tool none \
     --genefinding-gff3 ${GFF} \
@@ -174,9 +175,9 @@ antismash \
 
 **Parameter explanation:**
 
-- `--genefinding-tool prodigal`: Use Prodigal for gene prediction
-  - Use this when input is FASTA
-  - Omit if using GenBank file (uses existing annotations)
+- `--genefinding-tool none`: Use pre-existing annotations
+  - Use with `--genefinding-gff3` when annotations are available
+  - Alternative: `--genefinding-tool prodigal` if using FASTA without annotations
 - `--genefinding-gff3`: path to bakta gff3 file
 - `--output-dir`: Output directory for results
 - `--output-basename`: Prefix for output files
@@ -363,11 +364,18 @@ BGC types:
 
 # List all regions
 ls results/screening/${SAMPLE}/antismash/*.region*.gbk
+```
 
-# You can convert to FASTA if needed:
+**Convert to FASTA if needed:**
+
+```python
 from Bio import SeqIO
+import sys
 
-for record in SeqIO.parse("results/screening/${SAMPLE}/antismash/${SAMPLE}.gbk", "genbank"):
+sample = "F003_M_enclense"
+gbk_file = f"results/screening/{sample}/antismash/{sample}.gbk"
+
+for record in SeqIO.parse(gbk_file, "genbank"):
     # Extract regions marked as BGC
     print(f">{record.id}")
     print(record.seq)

@@ -21,6 +21,9 @@ conda activate VTK2026_Annotate
 
 # Verify Bakta is installed
 bakta --version
+
+# Verify bioawk is available (used in later steps)
+bioawk -h || conda install -c bioconda bioawk
 ```
 
 ### Required Input
@@ -422,9 +425,8 @@ grep -c "^>" F003_M_enclense.faa
 grep -v "^>" F003_M_enclense.faa | awk '{s+=length} END {print "Total AA:", s}'
 
 # Average protein length
-grep -v "^>" F003_M_enclense.faa | \
-    awk '/^>/ {if (seq) print length(seq); seq=""} !/^>/ {seq=seq $0} END {print length(seq)}' | \
-    awk '{sum+=$1; n++} END {print "Average length:", sum/n, "AA"}'
+awk '/^>/ {if (seq) print length(seq); header=$0; seq=""; next} {seq=seq $0} END {if (seq) print length(seq)}' F003_M_enclense.faa | \
+    awk '{sum+=$1; n++} END {if (n>0) print "Average length:", sum/n, "AA"}'
 ```
 
 ### 5.3 Find Specific Proteins
@@ -437,10 +439,7 @@ grep -A1 "DNA polymerase" F003_M_enclense.faa
 grep -c "ribosomal protein" F003_M_enclense.faa
 
 # Find the longest protein
-grep -v "^>" F003_M_enclense.faa | \
-    awk '/^>/ {if (seq) {print length(seq), header}; header=$0; seq=""} \
-         !/^>/ {seq=seq $0} \
-         END {print length(seq), header}' | \
+awk '/^>/ {if (seq && header) print length(seq), header; header=$0; seq=""; next} {seq=seq $0} END {if (seq && header) print length(seq), header}' F003_M_enclense.faa | \
     sort -rn | head -1
 ```
 
@@ -635,10 +634,8 @@ find results/annotation -name "*.json" | while read line ; do
         print(json.load(f)['stats']['no_r_rna'])")
     
     # Calculate hypothetical percentage
-    HYPO=$(grep -c "hypothetical protein" $(${line} | sed 's/.json/.tsv/g') || echo 0)
-    HYPO_PCT=$(echo "scale=1; $HYPO * 100 / $CDS" | bc)
-    
-    echo -e "${SAMPLE}\t${SIZE}\t${GENES}\t${CDS}\t${TRNA}\t${RRNA}\t${HYPO_PCT}" >> annotation_comparison.tsv
+    TSV_FILE=$(echo "${line}" | sed 's/\.json/\.tsv/g')
+    HYPO=$(grep -c "hypothetical protein" "${TSV_FILE}" || echo 0)
 done
 
 # View formatted table
@@ -650,12 +647,12 @@ column -t annotation_comparison.tsv
 ```bash
 # Extract gene names for each sample
 for SAMPLE in F003_M_enclense F003_M_ginsengisoli; do
-    grep "	gene	" ${SAMPLE} | \
+    grep "	gene	" ${SAMPLE}.gff3 | \
         grep -o "Name=[^;]*" | cut -d= -f2 | sort > ${SAMPLE}_genes.txt
 done
 
 # Find common genes (core genome)
-  F003_M_enclense_genes.txt F003_M_ginsengisoli_genes.txt | wc -l
+comm -12 F003_M_enclense_genes.txt F003_M_ginsengisoli_genes.txt | wc -l
 echo "Core genes (shared between both Microbacterium species)"
 
 # Find unique genes (accessory genome)

@@ -32,3 +32,4 @@ if os.path.exists(json_file):
             print(f"  {ctype}: {count}")
 else:
     print(f"antiSMASH JSON not found: {json_file}")
+    sys.exit(1)

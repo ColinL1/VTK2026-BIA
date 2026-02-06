@@ -8,16 +8,13 @@ library(pheatmap)
 library(RColorBrewer)
 
 # Read ANI matrix
-ani_matrix <- read.table('results/comparative/ani/ani_matrix.tsv', header=TRUE, row.names=1, sep='\t')
 data <- read.table('results/comparative/ani/ani_matrix.tsv', header=FALSE, sep='\t')
 colnames(data) <- c('Query', 'Reference', 'ANI', 'Matches', 'Fragments')
 
 # Convert to matrix format
 ani_matrix <- xtabs(data[[3]] ~ data[[1]] + data[[2]])
-# Replace NA with 0 for visualization purposes
-ani_matrix[is.na(ani_matrix)] <- 0
 
-# Convert to numeric matrix
+# Convert to numeric matrix and keep NAs
 ani_mat <- as.matrix(ani_matrix)
 
 # Create heatmap with pheatmap
@@ -32,7 +29,8 @@ pheatmap(ani_mat,
          main = "Average Nucleotide Identity (ANI) Matrix",
          fontsize = 10,
          fontsize_number = 8,
-         angle_col = 45)
+         angle_col = 45,
+         na_col = "grey80")
 dev.off()
 cat("Heatmap saved: ani_heatmap.png\n")
 

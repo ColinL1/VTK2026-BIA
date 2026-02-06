@@ -14,7 +14,7 @@ This guide focuses on transforming raw ONT sequencing data into annotated bacter
 
 ---
 
-## Sturcture
+## Structure
 
 1. [QC](01_QC.md)
 2. [Assembly](02_ASSEMBLY.md)
