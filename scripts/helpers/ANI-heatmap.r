@@ -8,14 +8,11 @@ library(pheatmap)
 library(RColorBrewer)
 
 # Read ANI matrix
-data <- read.table('results/comparative/ani/ani_matrix.tsv', header=FALSE, sep='\t')
-colnames(data) <- c('Query', 'Reference', 'ANI', 'Matches', 'Fragments')
-
-# Convert to matrix format
-ani_matrix <- xtabs(data[[3]] ~ data[[1]] + data[[2]])
-
-# Convert to numeric matrix and keep NAs
-ani_mat <- as.matrix(ani_matrix)
+data <- read.table('results/comparative/ani/ani_matrix.tsv', header=TRUE, sep='\t', row.names=1, check.names=FALSE)
+# Convert to matrix and handle NA values
+ani_mat <- as.matrix(data)
+# Replace NA with 0 for visualization (or you could use a different value)
+ani_mat[is.na(ani_mat)] <- 0
 
 # Create heatmap with pheatmap
 png('ani_heatmap.png', width=15, height=15, units='in', res=300)
